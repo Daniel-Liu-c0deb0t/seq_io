@@ -192,6 +192,28 @@ where
         }))
     }
 
+    #[inline]
+    pub fn next_with_pos(&mut self) -> Option<Result<(RefRecord, Position), Error>> {
+        if self.finished || !self.initialized() && !try_opt!(self.init()) {
+            return None;
+        }
+
+        if !self.buf_pos.is_new() {
+            self.next_pos();
+        }
+
+        if !try_opt!(self.search()) && !try_opt!(self.next_complete()) {
+            return None;
+        }
+
+        let pos = self.position.clone();
+
+        Some(Ok((RefRecord {
+            buffer: self.get_buf(),
+            buf_pos: &self.buf_pos,
+        }, pos)))
+    }
+
     /// Updates a [RecordSet](struct.RecordSet.html) with new data. The contents of the internal
     /// buffer are just copied over to the record set and the positions of all records are found.
     /// Old data will be erased. Returns `None` if the input reached its end.
